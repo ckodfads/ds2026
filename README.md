@@ -10,5 +10,5 @@ Student Info
 =========================
 
 * Student Name: Vo Truong Giang
-* Student ID: BI12-120
+* Student ID: BI12-130
 * Student Group ID: Not-for-now
