@@ -1,0 +1,91 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{float}
+
+
+\geometry{a4paper, margin=1in}
+
+\title{Practical Work 1: TCP File Transfer}
+\author{Võ Trường Giang - BI12-130} 
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+In this practical work, I developed a Command Line Interface (CLI) application to transfer files between a Client and a Server using C sockets over TCP/IP. The system ensures reliability and follows a specific application-level protocol.
+
+\section{Protocol Design}
+Below is the text-based diagram illustrating the interaction between the Client and the Server. The protocol uses a handshake mechanism ("OK" signal) to ensure the server is ready before the file content is streamed.
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+CLIENT                                                  SERVER
+
+connect ---------------------------------------------> accept
+   |                                                      |
+send(filename) --------------------------------------> recv(filename)
+   |                                                      |
+   |                                                   fopen("received_...")
+   |                                                      |
+   |<------------------------------------------ send("OK")|
+recv("OK")                                                |
+   |                                                      |
+send(file data chunks) ------------------------------> recv(buffer)
+   |            (Loop until End of File)                  |--> fwrite(buffer)
+   |                                                      |
+close -----------------------------------------------> close
+\end{verbatim}
+\caption{Protocol Sequence Diagram}
+\end{figure}
+
+\section{System Organization}
+The system architecture follows the Client-Server model:
+\begin{itemize}
+    \item \textbf{Server:} Binds to port 8080 and listens for connections. It saves received files with a "received\_" prefix.
+    \item \textbf{Client:} Connects to the Server's IP (127.0.0.1) and streams the file data.
+\end{itemize}
+
+\section{Implementation Details}
+Below are the core code snippets demonstrating the transfer logic.
+
+\subsection{Server Side (Receiver)}
+\begin{lstlisting}[language=C, basicstyle=\small, frame=single]
+// 1. Receive Filename
+read(new_socket, buffer, BUFFER_SIZE);
+sprintf(filename, "received_%s", buffer);
+
+// 2. Send Acknowledgement
+send(new_socket, "OK", 2, 0);
+
+// 3. Receive Data Loop
+FILE *fp = fopen(filename, "wb");
+while ((valread = recv(new_socket, buffer, BUFFER_SIZE, 0)) > 0) {
+    fwrite(buffer, 1, valread, fp);
+}
+fclose(fp);
+\end{lstlisting}
+
+\subsection{Client Side (Sender)}
+\begin{lstlisting}[language=C, basicstyle=\small, frame=single]
+// 1. Send Filename
+send(sock, filename, strlen(filename), 0);
+
+// 2. Wait for Server Readiness
+read(sock, buffer, BUFFER_SIZE);
+if (strcmp(buffer, "OK") == 0) {
+    // 3. Send Data Loop
+    while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, fp)) > 0) {
+        send(sock, buffer, bytes_read, 0);
+    }
+}
+\end{lstlisting}
+
+\section{Conclusion}
+The implementation successfully transfers both text and binary files (like images). The use of the "OK" acknowledgment ensures the Server is ready before data is sent.
+
+\end{document}
