@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{float}
+\geometry{a4paper, margin=1in}
+
+\title{Practical Work 2: RPC File Transfer}
+\author{Vo Truong Giang - BI12-130}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+In this practical work, I upgraded the file transfer system from TCP sockets to Remote Procedure Calls (RPC) using the ONC RPC (Sun RPC) standard.
+
+\section{RPC Service Design}
+Unlike the streaming approach of TCP sockets, RPC allows the client to invoke a function on the server directly.
+\begin{itemize}
+    \item \textbf{Input:} A structure containing the filename (string) and file content (opaque data).
+    \item \textbf{Output:} An integer status code (1 for success, 0 for failure).
+    \item \textbf{Tool used:} \texttt{rpcgen} to generate stubs and XDR filters.
+\end{itemize}
+
+\section{System Organization}
+The system consists of:
+\begin{itemize}
+    \item \textbf{transfer.x:} The Interface Definition Language (IDL) file.
+    \item \textbf{Server:} Implements the \texttt{upload\_file\_1\_svc} function to write data to disk.
+    \item \textbf{Client:} Reads the file into memory and calls \texttt{upload\_file\_1}.
+\end{itemize}
+
+\section{Implementation}
+\subsection{Protocol Definition (.x file)}
+\begin{lstlisting}[basicstyle=\small, frame=single]
+struct file_data {
+    string name<256>;
+    opaque data<>;
+    int bytes_sent;
+};
+program FILE_TRANSFER_PROG {
+    version V1 {
+        int UPLOAD_FILE(file_data) = 1;
+    } = 1;
+} = 0x31230000;
+\end{lstlisting}
+
+\section{Conclusion}
+The RPC implementation abstracts the networking details, allowing the developer to focus on the logic of function calls. The system successfully transfers files using the defined RPC interface.
+
+\end{document}
