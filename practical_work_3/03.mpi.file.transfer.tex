@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{float}
+\geometry{a4paper, margin=1in}
+
+\title{Practical Work 3: MPI File Transfer}
+\author{Vo Truong Giang - BI12-130}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+In this practical work, I implemented a file transfer system using the Message Passing Interface (MPI). Unlike the previous Client-Server models (TCP/RPC), MPI allows processes to communicate within a parallel computing environment.
+
+\section{MPI Implementation Choice}
+I chose \textbf{OpenMPI} because it is the standard, open-source implementation of MPI on Linux/Ubuntu systems. It provides robust tools like \texttt{mpicc} for compilation and \texttt{mpirun} for execution.
+
+\section{System Design}
+The system runs as a single executable but behaves differently based on the process rank:
+\begin{itemize}
+    \item \textbf{Rank 0 (Receiver):} Acts as the server. It waits for messages with \texttt{TAG\_FILENAME} then \texttt{TAG\_CONTENT}.
+    \item \textbf{Rank 1 (Sender):} Acts as the client. It reads the file and sends data to Rank 0.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+RANK 1 (Sender)                               RANK 0 (Receiver)
+   |                                                |
+   |--- MPI_Send(Filename, TAG_FILENAME) ---------->| MPI_Recv
+   |                                                |
+   |--- MPI_Send(Data Chunk, TAG_CONTENT) --------->| MPI_Recv (Loop)
+   |--- MPI_Send(Data Chunk, TAG_CONTENT) --------->| MPI_Recv
+   |                  ...                           |
+   |--- MPI_Send(0 bytes, TAG_CONTENT) ------------>| MPI_Recv (Stop)
+   |                                                |
+\end{verbatim}
+\caption{MPI Point-to-Point Communication Design}
+\end{figure}
+
+\section{Implementation Details}
+\begin{lstlisting}[language=C, basicstyle=\small, frame=single]
+// Main logic based on Rank
+MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+if (world_rank == 0) {
+    run_server(); // Uses MPI_Recv loop
+} else if (world_rank == 1) {
+    run_client(argv[1]); // Uses MPI_Send loop
+}
+\end{lstlisting}
+
+\section{Conclusion}
+The MPI implementation successfully transfers files between two processes using blocking point-to-point communication routines.
+
+\end{document}
