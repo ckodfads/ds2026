@@ -1,0 +1,77 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{graphicx}
+
+\geometry{a4paper, margin=1in}
+
+\title{Practical Work 4: MapReduce Word Count}
+\author{Vo Truong Giang - BI12-130}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+In this practical work, I implemented a Word Count application using the MapReduce paradigm.
+
+\section{Implementation Choice}
+As per the requirement to "Invent yourself" a framework for C/C++, I chose to implement a simplified single-process MapReduce system in C.
+\begin{itemize}
+    \item \textbf{Language:} C.
+    \item \textbf{Reason:} Lightweight, fast, and aligns with the previous labs.
+    \item \textbf{Architecture:} I separated the logic into a \texttt{mapper} function (parsing text) and a \texttt{reducer} function (aggregating counts).
+\end{itemize}
+
+\section{System Design}
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+Input File
+    |
+    | (Read line by line)
+    v
++------------+          +-------------+
+|   MAPPER   | -------> |   REDUCER   |
++------------+          +-------------+
+ - Tokenize string       - Check existence
+ - Clean words           - Increment count
+ - Emit (Word)           - Store Result
+                            |
+                            v
+                       Final Output List
+\end{verbatim}
+\caption{Simplified MapReduce Workflow}
+\end{figure}
+
+\section{Code Snippets}
+
+\subsection{Mapper Logic}
+The mapper reads text lines, splits them into tokens (words), cleans them (lowercase), and passes them to the reducer.
+\begin{lstlisting}[language=C, basicstyle=\small, frame=single]
+void mapper(char *text) {
+    char *token = strtok(text, " ");
+    while (token != NULL) {
+        // ... Normalize word ...
+        reducer(token);
+        token = strtok(NULL, " ");
+    }
+}
+\end{lstlisting}
+
+\subsection{Reducer Logic}
+The reducer maintains a list of unique words and increments their frequency.
+\begin{lstlisting}[language=C, basicstyle=\small, frame=single]
+void reducer(char *word) {
+    // Check if word exists in list
+    // If yes: count++
+    // If no: add new entry with count = 1
+}
+\end{lstlisting}
+
+\section{Conclusion}
+The program successfully mimics the MapReduce logic to count words in a text file efficiently.
+
+\end{document}
